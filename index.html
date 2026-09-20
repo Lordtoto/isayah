@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Isayah">
 <meta name="theme-color" content="#14224A">
-<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAABfQklEQVR42u19d5wcxdF2VXfPzObdyzkoI4EyApQAkcEkkwy2wTi8gG0MOCdeh9c2JhgRbLDBOGFlyjpYIAiEJBYRyrsfdlz3jzT3fX9MXunUwSkE8HfNfs77vb2VjvfzIzVwCzhC0wZCOe96s5Xb63bK2a7Q4gXgH5f87//L3PmrNm4MYYQAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAABfQklEQVR42u19d5wcxdF2VXfPzObdyzkoI4EyApQAkcEkkwy2wTi8gG0MOCdefl9c2JhgRbLDBOGFlyjpYIAiEJBYRyrsfdlz3jzT3fX9MXunUwSkE8HfNfs77vb2VjvfzIzVwCzhC0wZCOe96s5Xb63bK2a7Q4gXgH5f87//L3PmrNm4MYYQAAAAAElFTkSuQmCC">
 <title>Isayah ⚽ Elne 2</title>
 <!-- Script Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -58,7 +58,6 @@
   .kpi.star .sub{color:rgba(255,255,255,.8)}
   .row2{display:flex;gap:10px;margin-top:10px}
   .row2 .kpi{flex:1}
-  .mini .val{font-size:22px}
   h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
     margin:24px 4px 10px;font-weight:700;display:flex;align-items:center;gap:7px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
@@ -92,7 +91,7 @@
   .postags{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 12px}
   .postag{font-size:11px;font-weight:700;background:var(--navy);color:#fff;border-radius:20px;padding:3px 9px}
   .postag.coach{background:var(--gold)}
-  .plphoto{width:100%;border-radius:12px;margin-bottom:10px;display:block}
+  .plphoto{width:100%;border-radius:12px;margin-bottom:10px;display:block;max-height:220px;object-fit:cover}
   .pl .body{border-top:1px solid var(--line);padding:12px 14px;display:none}
   .pl.open .body{display:block}
   .pl.open .chev{transform:rotate(90deg)}
@@ -141,14 +140,9 @@
   .stepper .n{min-width:26px;text-align:center;font-size:16px;font-weight:700}
   .sep{color:var(--muted);font-weight:700}
   .rm{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 6px}
-  .chip{border:1px dashed var(--line);background:var(--card);color:var(--muted);border-radius:20px;
-    padding:6px 12px;font-size:13px;cursor:pointer}
   .save{width:100%;margin:20px 0 6px;padding:15px;background:linear-gradient(135deg,var(--navy),var(--royal));
     color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
-  .hint{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
-  .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px}
-  .empty .big{font-size:40px;margin-bottom:10px}
+  .backup-bar{display:flex;gap:8px;margin-top:20px;justify-content:center}
 </style>
 </head>
 <body>
@@ -160,6 +154,12 @@
     </div>
   </div>
   <div id="app"><div class="empty"><div class="big">⏳</div>Chargement…</div></div>
+  
+  <div class="backup-bar">
+    <button class="btn sm" id="exportBtn">📥 Télécharger la sauvegarde</button>
+    <button class="btn sm" id="importBtn">📤 Restaurer</button>
+    <input type="file" id="fileInput" style="display:none" accept=".json">
+  </div>
 </div>
 
 <button class="fab" id="fab" style="display:none">＋ Ajouter un plateau</button>
@@ -173,42 +173,22 @@
 <script>
 const STAR = "Isayah";
 const POSITIONS = ["Gardien","Défense","Aile G","Aile D","Milieu","Attaque"];
-let state = { plateaux:[], roster:[], loading:true, error:false, open:{}, draft:null, mode:null, rosterDraft:null, photoUrls:{} };
+let state = { plateaux:[], roster:[], loading:true, error:false, open:{}, draft:null, mode:null };
 
-// --- CONFIGURATION SUPABASE (PROJET SUIVI-ISAYAH) ---
+// --- CONFIGURATION SUPABASE ---
 const SUPABASE_URL = 'https://vjisowldeyatqyrrivka.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0...'; // Remplacé avec ta clé complète
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0');
-
-async function persist(){
-  try{
-    for(const p of state.plateaux){
-      await supabaseClient.from('plateaux').upsert({
-        id: p.id,
-        date: p.date,
-        coach: p.coach,
-        positions: p.positions,
-        matches: p.matches,
-        scorers: p.scorers,
-        assists: p.assists,
-        label: p.label || null
-      });
-    }
-  }catch(e){ alert("Sauvegarde en ligne impossible."); }
-}
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (async function boot(){
   try{
     const { data, error } = await supabaseClient.from('plateaux').select('*');
     if(!error && data){
       state.plateaux = data;
-      state.roster = ["Isayah","Ewan","Antoine","Raphaël"];
     } else {
-      state.roster = ["Isayah","Ewan","Antoine","Raphaël"];
       state.plateaux = [];
     }
   }catch(e){ 
-    state.roster = ["Isayah","Ewan","Antoine","Raphaël"];
     state.plateaux = [];
   }
   state.loading=false; render();
@@ -233,12 +213,6 @@ function totals(){
     (p.positions||[]).forEach(pp=>{ pos[pp]=(pos[pp]||0)+1; });
   });
   return {ig,ia,played:state.plateaux.length,m,w,d,l,sc,as,pos,coaches};
-}
-function knownPlayers(){
-  const s=new Set([STAR]);
-  state.roster.forEach(n=>s.add(n));
-  state.plateaux.forEach(p=>{ Object.keys(p.scorers||{}).forEach(n=>s.add(n)); Object.keys(p.assists||{}).forEach(n=>s.add(n)); });
-  return [...s];
 }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -345,6 +319,7 @@ function plateauCard(p){
   if((p.coach||"").trim()) tags.push('<span class="postag coach">🎓 '+esc(p.coach.trim())+'</span>');
   if(tags.length) h+='<div class="postags">'+tags.join('')+'</div>';
   h+='<div class="body">';
+  if(p.photo) h+='<img class="plphoto" src="'+p.photo+'">';
   matches.forEach(m=>{ const gf=num(m.gf),ga=num(m.ga); const cls=gf>ga?'win':(gf<ga?'loss':'');
     h+='<div class="mt"><span>'+esc(m.opponent||'Adversaire')+'</span><span class="sc '+cls+'">'+gf+' - '+ga+'</span></div>'; });
   const scs=Object.entries(p.scorers||{}).filter(([,c])=>num(c)>0).sort((a,b)=>b[1]-a[1]);
@@ -356,7 +331,7 @@ function plateauCard(p){
 }
 
 function today(){ return new Date().toISOString().slice(0,10); }
-function blankDraft(){ return { id:null, date:today(), coach:"", positions:[], matches:[{opponent:"",gf:0,ga:0}], scorers:[{name:STAR,goals:0}], assists:[{name:STAR,goals:0}] }; }
+function blankDraft(){ return { id:null, date:today(), coach:"", positions:[], matches:[{opponent:"",gf:0,ga:0}], scorers:[{name:STAR,goals:0}], assists:[{name:STAR,goals:0}], photo:null }; }
 function openAdd(){ state.mode="plateau"; state.draft=blankDraft(); showSheet("Nouveau plateau"); }
 function openEdit(id){
   const p=state.plateaux.find(x=>x.id===id); if(!p)return;
@@ -366,7 +341,7 @@ function openEdit(id){
   if(!scorers.some(s=>s.name===STAR)) scorers.unshift({name:STAR,goals:0});
   if(!assists.some(s=>s.name===STAR)) assists.unshift({name:STAR,goals:0});
   state.draft={ id:p.id, date:p.date||today(), coach:p.coach||"", positions:[...(p.positions||[])],
-    matches:(p.matches||[]).map(m=>({opponent:m.opponent||"",gf:num(m.gf),ga:num(m.ga)})), scorers, assists };
+    matches:(p.matches||[]).map(m=>({opponent:m.opponent||"",gf:num(m.gf),ga:num(m.ga)})), scorers, assists, photo:p.photo||null };
   showSheet("Modifier le plateau");
 }
 function showSheet(title){ document.getElementById("sheetTitle").textContent=title; renderSheet();
@@ -381,6 +356,9 @@ function renderSheet(){
   let h='';
   h+='<div class="field"><label>Date du plateau</label><input type="date" id="f-date" value="'+d.date+'"></div>';
   h+='<div class="field"><label>Coach</label><input class="txt" id="f-coach" placeholder="Nom du coach" value="'+esc(d.coach||"")+'"></div>';
+  h+='<div class="field"><label>Photo souvenir</label><input type="file" id="f-photo" accept="image/*" style="width:100%;margin-top:4px"></div>';
+  if(d.photo) h+='<div style="margin-top:8px"><img src="'+d.photo+'" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px"><br><button class="btn sm del" id="rmPhoto" style="margin-top:6px">Supprimer la photo</button></div>';
+
   h+='<div class="subsec">Poste(s) d\'Isayah</div>';
   h+='<div class="posrow">'+POSITIONS.map(p=>'<button class="postoggle'+(d.positions.includes(p)?' on':'')+'" data-pos="'+esc(p)+'">'+esc(p)+'</button>').join('')+'</div>';
   h+='<div class="subsec">Matchs <span class="add" data-addm>＋ match</span></div>';
@@ -409,6 +387,17 @@ function playerRow(kind,i,s){
 function wireSheet(){
   const root=document.getElementById("sheetBody"), $=(s)=>root.querySelectorAll(s), d=state.draft;
   document.getElementById("f-date").onchange=e=>{d.date=e.target.value;};
+  
+  const fp=document.getElementById("f-photo");
+  if(fp) fp.onchange=e=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{ d.photo=ev.target.result; renderSheet(); };
+    reader.readAsDataURL(file);
+  };
+  const rp=document.getElementById("rmPhoto");
+  if(rp) rp.onclick=()=>{ d.photo=null; renderSheet(); };
+
   $("[data-pos]").forEach(el=>el.onclick=()=>{ const p=el.dataset.pos; const i=d.positions.indexOf(p);
     if(i>=0)d.positions.splice(i,1); else d.positions.push(p); renderSheet(); });
   $("[data-opp]").forEach(el=>el.oninput=e=>{d.matches[+el.dataset.opp].opponent=e.target.value;});
@@ -426,6 +415,7 @@ function wireSheet(){
   const fc=document.getElementById("f-coach"); if(fc) fc.oninput=e=>{d.coach=e.target.value;};
   document.getElementById("saveBtn").onclick=savePlateau;
 }
+
 async function savePlateau(){
   const d=state.draft; if(!d)return;
   const btn=document.getElementById("saveBtn"); btn.disabled=true; btn.textContent="Enregistrement…";
@@ -436,7 +426,7 @@ async function savePlateau(){
     .map(m=>({opponent:(m.opponent||"").trim(),gf:num(m.gf),ga:num(m.ga)}));
   
   const id=d.id||('pl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-  const body={ id, date:d.date, coach:(d.coach||"").trim(), positions:[...d.positions], matches, scorers, assists };
+  const body={ id, date:d.date, coach:(d.coach||"").trim(), positions:[...d.positions], matches, scorers, assists, photo:d.photo||null };
   
   try{
     await supabaseClient.from('plateaux').upsert(body);
@@ -445,6 +435,7 @@ async function savePlateau(){
     closeSheet(); render();
   }catch(e){ btn.disabled=false; btn.textContent="Réessayer"; alert("Erreur d'enregistrement."); }
 }
+
 async function delPlateau(id){
   if(!confirm("Supprimer ce plateau ?")) return;
   try{
@@ -453,6 +444,37 @@ async function delPlateau(id){
     render();
   }catch(e){ alert("Suppression impossible."); }
 }
+
+// Sauvegarde et Restauration globale
+document.getElementById("exportBtn").onclick=()=>{
+  const dataStr="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state.plateaux,null,2));
+  const dlAnchor=document.createElement('a');
+  dlAnchor.setAttribute("href",dataStr);
+  dlAnchor.setAttribute("download","sauvegarde_isayah.json");
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+};
+
+document.getElementById("importBtn").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=(e)=>{
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async(event)=>{
+    try{
+      const imported=JSON.parse(event.target.result);
+      if(Array.isArray(imported)){
+        for(const item of imported){
+          await supabaseClient.from('plateaux').upsert(item);
+        }
+        state.plateaux=imported;
+        render();
+        alert("Restauration réussie !");
+      }
+    }catch(err){ alert("Erreur lors de la lecture du fichier de sauvegarde."); }
+  };
+  reader.readAsText(file);
+};
 </script>
 </body>
 </html>
