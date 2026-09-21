@@ -175,9 +175,9 @@ const STAR = "Isayah";
 const POSITIONS = ["Gardien","Défense","Aile G","Aile D","Milieu","Attaque"];
 let state = { plateaux:[], roster:[], loading:true, error:false, open:{}, draft:null, mode:null };
 
-// --- CONFIGURATION SUPABASE ---
+// --- CONFIGURATION SUPABASE (Nouvelle Publishable Key) ---
 const SUPABASE_URL = 'https://vjisowldeyatqyrrivka.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0';
+const SUPABASE_ANON_KEY = 'sb_publishable_g7PLF00bAL_43DBMe1nw1Q__dj-K...';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (async function boot(){
