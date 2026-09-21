@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#14224A">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAABfQklEQVR42u19d5wcxdF2VXfPzObdyzkoI4EyApQAkcEkkwy2wTi8gG0MOCdefl9c2JhgRbLDBOGFlyjpYIAiEJBYRyrsfdlz3jzT3fX9MXunUwSkE8HfNfs77vb2VjvfzIzVwCzhC0wZCOe96s5Xb63bK2a7Q4gXgH5f87//L3PmrNm4MYYQAAAAAElFTkSuQmCC">
 <title>Isayah ⚽ Elne 2</title>
-<!-- Script Supabase -->
+<!-- Script Supabase standard -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -175,9 +175,9 @@ const STAR = "Isayah";
 const POSITIONS = ["Gardien","Défense","Aile G","Aile D","Milieu","Attaque"];
 let state = { plateaux:[], roster:[], loading:true, error:false, open:{}, draft:null, mode:null };
 
-// --- CONFIGURATION SUPABASE (Nouvelle Publishable Key) ---
+// --- CONFIGURATION SUPABASE ---
 const SUPABASE_URL = 'https://vjisowldeyatqyrrivka.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_g7PLF00bAL_43DBMe1nw1Q__dj-K...';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaXNvd2xkZXlhdHF5cnJpdmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTkwOTAsImV4cCI6MjA3Mzg5NTA5MH0';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (async function boot(){
